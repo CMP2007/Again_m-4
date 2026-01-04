@@ -36,3 +36,44 @@ describe('total likes', () => {
     assert.strictEqual(listHelper.totalLikes([]), 0)
   })
 })
+
+
+describe('More likes', ()=>{
+
+  test('la funcion haya el objeto con mas likes', ()=>{
+    const result = listHelper.favoriteBlog(testsBlogs)
+    const newObject = {
+      title: testsBlogs[2].title,
+      author: testsBlogs[2].author,
+      likes: testsBlogs[2].likes
+    }
+    assert.deepStrictEqual(result,newObject)
+  })
+
+  test('la funcion no explota al recibir un array vacio', ()=>{
+    assert.strictEqual(listHelper.favoriteBlog([]), null)
+  })
+
+  test('responde con un unico dato enviado', ()=>{
+    const listWithOneBlog = [
+    {
+      _id: '5a422aa71b54a676234d17f8',
+      title: 'Go To Statement Considered Harmful',
+      author: 'Edsger W. Dijkstra',
+      url: 'https://homepages.cwi.nl/~storm/teaching/reader/Dijkstra68.pdf',
+      likes: 5,
+      __v: 0
+    }
+  ]
+  const responseOneBlog = {
+        title: 'Go To Statement Considered Harmful',
+        author: 'Edsger W. Dijkstra',
+        likes: 5,
+      }
+    console.log(listWithOneBlog);
+    const result = listHelper.favoriteBlog(listWithOneBlog)
+    console.log(result);
+    
+    assert.deepStrictEqual(result, responseOneBlog)
+  })
+})
