@@ -24,9 +24,33 @@ const favoriteBlog = (blogs)=>{
   return blogWinner
 }
 
+const mostBlogs = (blogs)=>{
 
+  if (blogs.length ==0) {
+    return  null
+  }
+  const most = blogs.map(blog=>{   
+    const filter = blogs.filter(f=> f.author === blog.author)
+    return filter
+  })
+
+  const mostLength = most.map(blog=>blog.length)
+  
+  const maxMost = Math.max(...mostLength)
+  
+  const blogfind = most.find(blog=>blog.length===maxMost)
+  const oneBlog = blogfind[0]
+
+  const reducedBlog = {
+    author: oneBlog.author,
+    blogs: maxMost
+  }
+  return reducedBlog
+
+}
 module.exports = {
   dummy, 
   totalLikes,
-  favoriteBlog
+  favoriteBlog,
+  mostBlogs
 }
