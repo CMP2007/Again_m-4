@@ -48,9 +48,30 @@ const mostBlogs = (blogs)=>{
   return reducedBlog
 
 }
+
+const mostLikes = (blogs)=>{
+  if (blogs.length ==0) {
+    return  null
+  }
+  const count = blogs.reduce((nex, actual)=>{
+    nex[actual.author] = (nex[actual.author] || 0) + actual.likes
+    return nex
+  },{})
+  const moreLikes = Object.keys(count).reduce((nex, actual)=>
+    count[nex] > count[actual]  ?nex :actual
+  ,)
+  const winner = {
+    author: moreLikes,
+    likes: count[moreLikes]
+  }
+  return winner
+}
+
+
 module.exports = {
   dummy, 
   totalLikes,
   favoriteBlog,
-  mostBlogs
+  mostBlogs,
+  mostLikes
 }

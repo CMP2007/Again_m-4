@@ -79,3 +79,18 @@ describe('More Blogs for author', ()=>{
     assert.deepStrictEqual(listHelper.mostBlogs(listWithOneBlog), {author: 'Edsger W. Dijkstra', blogs:1})
   })
 })
+
+
+describe('More likes for author', ()=>{
+  test('la funcion encuentre el autor con mas likes',()=>{
+    assert.deepStrictEqual(listHelper.mostLikes(testsBlogs), {author: "Edsger W. Dijkstra",likes: 17,})
+  })
+
+  test('la funcion maneja datos vacios',()=>{
+    assert.strictEqual(listHelper.mostLikes([]), null)
+  })
+
+  test('la funcion maneja un nuico dato', ()=>{
+    assert.deepStrictEqual(listHelper.mostLikes(listWithOneBlog), {author: 'Edsger W. Dijkstra', likes: 5})
+  })
+})
