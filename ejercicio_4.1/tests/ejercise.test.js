@@ -45,6 +45,30 @@ describe('controlladores tests', ()=>{
          assert.strictEqual(response.body.length, 2)
     })
 
+    test('los datos poseen valor ID', async ()=>{
+      const response = await api.get('/api/blogs')
+      assert.ok(response.body[0].id)
+      assert.strictEqual('_id' in response.body[0], false)
+    })
+
+    test('los datos son enviados con exito de forma correcta', async ()=>{
+      const newObjet = {
+    "title": "bbbb",
+    "author": "miguel",
+    "url": "www/hola.net",
+    "likes": 10,
+    } 
+      const response = await api
+      .post('/api/blogs')
+      .send(newObjet)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+      assert.deepStrictEqual(response.body.author, 'miguel')
+
+      const data = await api.get('/api/blogs')
+      assert.strictEqual(data.body.length, initialBLogs.length +1)
+    })
 })
 
 after(async () => {

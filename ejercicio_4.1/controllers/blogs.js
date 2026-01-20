@@ -7,20 +7,13 @@ blogsRouter.get('/', async (request, response) => {
   response.json(blogs)
 })
 
-blogsRouter.post('/', (request, response) => {
+blogsRouter.post('/', async (request, response) => {
   const blog = new Blog(request.body)
-   if (blog === undefined) {
+   if (!blog.title || !blog.url) {
     return response.status(400).json({ error: 'content missing' })
   }
-
-  blog
-    .save()
-    .then(result => {
+   const result = await blog.save()
       response.status(201).json(result)
-    })
-    .catch(error =>{
-        return response.status(400).json({ error: 'error al registrar el blog' })
-    })
 })
 
 module.exports = blogsRouter
