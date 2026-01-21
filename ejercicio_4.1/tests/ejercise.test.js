@@ -86,6 +86,18 @@ describe('pruebas del controlador .POST',()=>{
 
     assert.deepStrictEqual(response.body.likes, 0)
   })
+
+  test('si alguno de los campos requeridos falta todo responde adecuadamente', async ()=>{
+    const newObjet = {
+      "title": "no url",
+      "author": "miguelllll",
+      "likes": 100,
+    }
+    const response = await api 
+    .post('/api/blogs')
+    .send(newObjet)
+    .expect(400)
+  })
 })
 
 after(async () => {
