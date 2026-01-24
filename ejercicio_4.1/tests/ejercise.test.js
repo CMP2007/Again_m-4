@@ -6,30 +6,15 @@ const app = require('../app')
 const assert = require('node:assert')
 const { log } = require('node:console')
 const { nonExistingId } = require('../../repaso_4.1/tests/test_helper')
+const helper = require('./test_helper_EJ')
 
 const api = supertest(app)
-
-const initialBLogs = [
-    {
-    "title": "hola",
-    "author": "carlos",
-    "url": "www/hola.com",
-    "likes": 5,
-    },
-    {
-    "title": "hola",
-    "author": "carlos",
-    "url": "www/hola.comm",
-    "likes": 55,
-    }
-]
 
 
 beforeEach(async () => {
   await Blog.deleteMany({})
-  await Blog.insertMany(initialBLogs)
+  await Blog.insertMany(helper.initialBLogs)
 })
-
 
 
 describe('pruebas del controlador .get', ()=>{
@@ -65,8 +50,9 @@ describe('pruebas del controlador .POST',()=>{
 
     assert.deepStrictEqual(response.body.author, 'miguel')
 
-    const data = await api.get('/api/blogs')
-    assert.strictEqual(data.body.length, initialBLogs.length +1)
+    const data = await helper.blogsInDb()
+    
+    assert.strictEqual(data.length, helper.initialBLogs.length +1)
   })
 
   test('si el campo likes esta vacion se retorna con un 0', async ()=>{
@@ -99,32 +85,24 @@ describe('pruebas del controlador .POST',()=>{
 
 describe('Pruebas del controlador .Delete', () => {
   test('el cotrolador .Delete borra correctamente los elementos', async () => {
-    const itemsBefore = await api.get('/api/blogs')
-    const deletedItem = itemsBefore.body[0]
+    const itemsBefore = await helper.blogsInDb()
+    const deletedItem = itemsBefore[0]
     
 
     const response = await api
     .delete(`/api/blogs/${deletedItem.id}`)
     .expect(204)
 
-    const itemsAfter = await api.get('/api/blogs')
+    const itemsAfter = await helper.blogsInDb()
 
-    const itemsAfterUrl = itemsAfter.body.map(i => i.url)
+    const itemsAfterUrl = itemsAfter.map(i => i.url)
     assert(!itemsAfterUrl.includes(deletedItem.url))
 
-    assert.strictEqual(itemsAfter.body.length, itemsBefore.body.length -1)
+    assert.strictEqual(itemsAfter.length, itemsBefore.length -1)
   })
 
   test('el controlador Delete reacciona bien a un id que no existe', async () => {
-    const efBlog = new Blog({
-      "title": "efimero",
-      "author": "carlos",
-      "url": "www/hola",
-      "likes": 505,
-    })
-    await efBlog.save()
-    await efBlog.deleteOne()
-    const notExistId = efBlog._id.toString()
+    const notExistId = await helper.nonExistingId()
     
     await api
     .delete(`/api/blogs/${notExistId}`)
@@ -135,6 +113,47 @@ describe('Pruebas del controlador .Delete', () => {
   test('el controlador responde correctamente 400 cuando el id no es valido', async () => {
     await api
     .delete(`/api/blogs/Idnovalido51154`)
+    .expect(400)
+  })
+})
+
+describe('Pruebas del controlador PUT', () => {
+  test('el controlador modifica correctamente el campo likes de los blogs', async () => {
+    const data = await helper.blogsInDb()
+    const blogchange = data[0]
+
+    const newValor = {
+    "title": "hola",
+    "author": "carlos",
+    "url": "www/hola.comm",
+    "likes": 550,
+    }
+    
+    const response = await api
+    .put(`/api/blogs/${blogchange.id}`)
+    .send(newValor)
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+
+    assert.strictEqual(response.body.likes, 550)
+
+    const dataAfter = await helper.blogsInDb()
+    const checkBlog = dataAfter[0]
+
+    assert.deepStrictEqual(checkBlog.likes, 550)
+  })
+
+  test('El contrlador responde adecuadamente ante id no validos', async () => {
+     const newValor = {
+    "title": "hola",
+    "author": "carlos",
+    "url": "www/hola.comm",
+    "likes": 650,
+    }
+
+    await api 
+    .put(`/api/blogs/NotValidId255225112`)
+    .send(newValor)
     .expect(400)
   })
 })
