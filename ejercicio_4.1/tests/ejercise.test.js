@@ -4,7 +4,8 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const assert = require('node:assert')
-const blog = require('../models/blog')
+const { log } = require('node:console')
+const { nonExistingId } = require('../../repaso_4.1/tests/test_helper')
 
 const api = supertest(app)
 
@@ -18,7 +19,7 @@ const initialBLogs = [
     {
     "title": "hola",
     "author": "carlos",
-    "url": "www/hola.com",
+    "url": "www/hola.comm",
     "likes": 55,
     }
 ]
@@ -26,11 +27,7 @@ const initialBLogs = [
 
 beforeEach(async () => {
   await Blog.deleteMany({})
-
-  const blogObjects = initialBLogs
-    .map(blog => new Blog(blog))
-  const promiseArray = blogObjects.map(blog => blog.save())
-  await Promise.all(promiseArray)
+  await Blog.insertMany(initialBLogs)
 })
 
 
@@ -96,6 +93,48 @@ describe('pruebas del controlador .POST',()=>{
     const response = await api 
     .post('/api/blogs')
     .send(newObjet)
+    .expect(400)
+  })
+})
+
+describe('Pruebas del controlador .Delete', () => {
+  test('el cotrolador .Delete borra correctamente los elementos', async () => {
+    const itemsBefore = await api.get('/api/blogs')
+    const deletedItem = itemsBefore.body[0]
+    
+
+    const response = await api
+    .delete(`/api/blogs/${deletedItem.id}`)
+    .expect(204)
+
+    const itemsAfter = await api.get('/api/blogs')
+
+    const itemsAfterUrl = itemsAfter.body.map(i => i.url)
+    assert(!itemsAfterUrl.includes(deletedItem.url))
+
+    assert.strictEqual(itemsAfter.body.length, itemsBefore.body.length -1)
+  })
+
+  test('el controlador Delete reacciona bien a un id que no existe', async () => {
+    const efBlog = new Blog({
+      "title": "efimero",
+      "author": "carlos",
+      "url": "www/hola",
+      "likes": 505,
+    })
+    await efBlog.save()
+    await efBlog.deleteOne()
+    const notExistId = efBlog._id.toString()
+    
+    await api
+    .delete(`/api/blogs/${notExistId}`)
+    .expect(204)
+
+  })
+
+  test('el controlador responde correctamente 400 cuando el id no es valido', async () => {
+    await api
+    .delete(`/api/blogs/Idnovalido51154`)
     .expect(400)
   })
 })
