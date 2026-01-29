@@ -9,11 +9,29 @@ const helper = require('./test_helper')
 
 const Note = require('../models/note')
 
+let userRes
+let token
+
 describe('when there is initially some notes saved', () => {
   //El metodo .insertmany permite hacer lo mismo que el siclo for of de forma automatica y en una sola peticion
   beforeEach(async () => {
     await Note.deleteMany({})
     await Note.insertMany(helper.initialNotes)
+
+    const user ={
+      "username": "readdd",
+      "name": "inicio de sesion",
+      "password":"Gene55",
+      "notes":[]
+    }
+    userRes = await api.post('/api/users').send(user)
+    const result = await api.post('/api/login').send({
+      username: user.username,
+      password: user.password
+    })
+
+    token = result.body.token
+
   })
 
   test('notes are returned as json', async () => {
@@ -72,10 +90,12 @@ describe('when there is initially some notes saved', () => {
       const newNote = {
         content: 'async/await simplifies making async calls',
         important: true,
+        userId: userRes.body.id
       }
 
       await api
         .post('/api/notes')
+        .set('Authorization', `Bearer ${token}`)
         .send(newNote)
         .expect(201)
         .expect('Content-Type', /application\/json/)
@@ -91,13 +111,16 @@ describe('when there is initially some notes saved', () => {
 
     test('fails with status code 400 if data invalid', async () => {
       const newNote = {
-        important: true
+        important: true,
+        userId: userRes.body.id
       }
 
       await api
         .post('/api/notes')
+        .set('Authorization', `Bearer ${token}`)
         .send(newNote)
         .expect(400)
+        .expect('Content-Type', /application\/json/)
 
       const notesAtEnd = await helper.notesInDb()
 

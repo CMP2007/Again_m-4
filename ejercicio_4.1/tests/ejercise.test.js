@@ -4,7 +4,6 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const assert = require('node:assert')
-const { log } = require('node:console')
 const { nonExistingId } = require('../../repaso_4.1/tests/test_helper')
 const helper = require('./test_helper_EJ')
 
