@@ -4,10 +4,14 @@ const userChema = new mongose.Schema({
     username: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        minlength: [3, 'el nombre de usuario no puede tener menos de 3 caracteres']
     },
     name: String,
-    passwordHash: String,
+    passwordHash:{
+        type: String,
+        required: true
+    },
     blogs: [
         {
             type: mongose.Schema.Types.ObjectId,
