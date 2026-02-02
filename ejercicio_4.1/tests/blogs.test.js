@@ -16,7 +16,7 @@ beforeEach(async () => {
 })
 
 
-describe('pruebas del controlador .get', ()=>{
+describe('pruebas del controlador .get de los blogs', ()=>{
     test('el codigo obtienes los datos de la base de Datos', async ()=>{
      const response = await api
         .get('/api/blogs')
@@ -33,13 +33,14 @@ describe('pruebas del controlador .get', ()=>{
     })
 })
 
-describe('pruebas del controlador .POST',()=>{
+describe('pruebas del controlador .POST de los Blogs',()=>{
   test('los datos son enviados con exito de forma correcta', async ()=>{
     const newObjet = {
       "title": "bbbb",
       "author": "miguel",
       "url": "www/hola.net",
       "likes": 10,
+      "user": ""
     } 
     const response = await api
     .post('/api/blogs')
@@ -59,6 +60,7 @@ describe('pruebas del controlador .POST',()=>{
       "title": "no likes",
       "author": "pablo",
       "url": "www/holaaa.net",
+      "user": ""
     }
     const response = await api
     .post('/api/blogs')
@@ -74,6 +76,7 @@ describe('pruebas del controlador .POST',()=>{
       "title": "no url",
       "author": "miguelllll",
       "likes": 100,
+      "user": ""
     }
     const response = await api 
     .post('/api/blogs')
@@ -82,7 +85,7 @@ describe('pruebas del controlador .POST',()=>{
   })
 })
 
-describe('Pruebas del controlador .Delete', () => {
+describe('Pruebas del controlador .Delete de los blogs', () => {
   test('el cotrolador .Delete borra correctamente los elementos', async () => {
     const itemsBefore = await helper.blogsInDb()
     const deletedItem = itemsBefore[0]
@@ -116,7 +119,7 @@ describe('Pruebas del controlador .Delete', () => {
   })
 })
 
-describe('Pruebas del controlador PUT', () => {
+describe('Pruebas del controlador PUT de los blogs', () => {
   test('el controlador modifica correctamente el campo likes de los blogs', async () => {
     const data = await helper.blogsInDb()
     const blogchange = data[0]

@@ -1,21 +1,38 @@
 const blogsRouter = require('express').Router()
 const { request } = require('express')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const { response } = require('../app')
 
 
 blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({})
+  const blogs = await Blog
+  .find({}).populate('user', {username: 1, name: 1, _id: 1})
   response.json(blogs)
 })
 
 blogsRouter.post('/', async (request, response) => {
-  const blog = new Blog(request.body)
+    
+    const users = await User.find({})
+    const userDefect = users[0]
+  
+  const blog = new Blog({
+    "title": request.body.title,
+    "author": request.body.author,
+    "url": request.body.url,
+    "likes": request.body.likes,
+    "user": userDefect._id.toString()
+  }) 
+
    if (!blog.title || !blog.url) {
     return response.status(400).json({ error: 'content missing' })
   }
-   const result = await blog.save()
-      response.status(201).json(result)
+  const savedBlog = await blog.save()
+  
+  userDefect.blogs = userDefect.blogs.concat(savedBlog._id)
+  await userDefect.save()
+  
+  response.status(201).json(savedBlog)
 })
 
 blogsRouter.delete('/:id', async (request, response) => {

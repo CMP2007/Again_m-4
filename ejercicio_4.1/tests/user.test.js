@@ -43,7 +43,7 @@ describe('Pruebas de los controladores relacionados a los usuarios', () => {
         assert(usernames.includes(newUser.username))
   })
 
-  describe('Cuando inicialmente hay un usuario en db', () => {
+  describe('validacions en caso de que algun campo no cumpla las normas', () => {
     test('La creación falla con el código de estado y el mensaje adecuados si el nombre de usuario ya está en uso', async () => {
         const usersAtStart = await helper.usersInDb()
 
@@ -64,9 +64,7 @@ describe('Pruebas de los controladores relacionados a los usuarios', () => {
 
         assert.strictEqual(usersAtEnd.length, usersAtStart.length)
     })
-  })
-
-  describe('validacions en caso de que algun campo no cumpla las normas', () => {
+  
     test('en caso de que la contraseña sea muy corta se responde con codigo 400', async () => {
       const usersAtStart = await helper.usersInDb()
 
