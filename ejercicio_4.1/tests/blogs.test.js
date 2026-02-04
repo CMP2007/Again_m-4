@@ -6,12 +6,43 @@ const app = require('../app')
 const assert = require('node:assert')
 const { nonExistingId } = require('../../repaso_4.1/tests/test_helper')
 const helper = require('./test_helper_EJ')
+const User = require('../models/user')
 
 const api = supertest(app)
 
 
 beforeEach(async () => {
   await Blog.deleteMany({})
+  await User.deleteMany({})
+  const newUser = {
+      username: "prueba",
+      name: "prueba",
+      password: "tests",
+      blogs: []
+  }
+  const user = await api
+    .post('/api/users')
+    .send(newUser)
+
+  const login = await api
+    .post('/api/login')
+    .send({username: "prueba", password: "tests"})
+
+  const token = login.body.token
+
+  const newObjet = {
+    "title": "forDeleted",
+    "author": "miguel",
+    "url": "www/hola.net",
+    "likes": 100,
+    "user": user.body.id
+  } 
+    
+  const response = await api
+    .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
+    .send(newObjet)
+
   await Blog.insertMany(helper.initialBLogs)
 })
 
@@ -23,7 +54,7 @@ describe('pruebas del controlador .get de los blogs', ()=>{
         .expect(200)
         .expect('Content-Type', /application\/json/)
         
-         assert.strictEqual(response.body.length, 2)
+         assert.strictEqual(response.body.length, 3)
     })
 
     test('los datos poseen valor id y no el _id', async ()=>{
@@ -33,17 +64,23 @@ describe('pruebas del controlador .get de los blogs', ()=>{
     })
 })
 
-describe('pruebas del controlador .POST de los Blogs',()=>{
+describe('pruebas del controlador .POST de los Blogs', ()=>{
   test('los datos son enviados con exito de forma correcta', async ()=>{
+    const login = await api
+      .post('/api/login')
+      .send({username: "prueba", password: "tests"})
+
+    const token = login.body.token
+
     const newObjet = {
       "title": "bbbb",
       "author": "miguel",
       "url": "www/hola.net",
-      "likes": 10,
-      "user": ""
+      "likes": 10
     } 
     const response = await api
     .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
     .send(newObjet)
     .expect(201)
     .expect('Content-Type', /application\/json/)
@@ -52,18 +89,24 @@ describe('pruebas del controlador .POST de los Blogs',()=>{
 
     const data = await helper.blogsInDb()
     
-    assert.strictEqual(data.length, helper.initialBLogs.length +1)
+    assert.strictEqual(data.length, helper.initialBLogs.length +2)
   })
 
   test('si el campo likes esta vacion se retorna con un 0', async ()=>{
+    const login = await api
+      .post('/api/login')
+      .send({username: "prueba", password: "tests"})
+    
+    const token = login.body.token
+
     const newObject = {
       "title": "no likes",
       "author": "pablo",
-      "url": "www/holaaa.net",
-      "user": ""
+      "url": "www/holaaa.net"
     }
     const response = await api
     .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
     .send(newObject)
     .expect(201)
     .expect('Content-Type', /application\/json/)
@@ -72,14 +115,20 @@ describe('pruebas del controlador .POST de los Blogs',()=>{
   })
 
   test('si alguno de los campos requeridos falta todo responde adecuadamente', async ()=>{
+    const login = await api
+    .post('/api/login')
+    .send({username: "prueba", password: "tests"})
+    
+    const token = login.body.token
+
     const newObjet = {
       "title": "no url",
       "author": "miguelllll",
-      "likes": 100,
-      "user": ""
+      "likes": 100
     }
     const response = await api 
     .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
     .send(newObjet)
     .expect(400)
   })
@@ -87,35 +136,73 @@ describe('pruebas del controlador .POST de los Blogs',()=>{
 
 describe('Pruebas del controlador .Delete de los blogs', () => {
   test('el cotrolador .Delete borra correctamente los elementos', async () => {
+    const login = await api
+    .post('/api/login')
+    .send({username: "prueba", password: "tests"})
+    
+    const blog = await Blog.findOne({title: "forDeleted"})
+    
+    const token = login.body.token
+
+    const itemsBefore = await helper.blogsInDb()
+
+    const response = await api
+    .delete(`/api/blogs/${blog.id}`)
+    .set('Authorization', `Bearer ${token}`)
+    .expect(204)
+
+    const itemsAfter = await helper.blogsInDb()
+
+    const itemsAfterUrl = itemsAfter.map(i => i.url)
+    assert(!itemsAfterUrl.includes(blog.url))
+
+    assert.strictEqual(itemsAfter.length, itemsBefore.length -1)
+  })
+
+  test('el controlador Delete reacciona bien a un id que no existe', async () => {
+    const login = await api
+    .post('/api/login')
+    .send({username: "prueba", password: "tests"})
+    
+    const token = login.body.token
+
+    const notExistId = await helper.nonExistingId()
+    
+    await api
+    .delete(`/api/blogs/${notExistId}`)
+    .set('Authorization', `Bearer ${token}`)
+    .expect(404)
+
+  })
+
+  test('el controlador responde correctamente 400 cuando el id no es valido', async () => {
+    const login = await api
+      .post('/api/login')
+      .send({username: "prueba", password: "tests"})
+    
+    const token = login.body.token
+
+    await api
+    .delete(`/api/blogs/Idnovalido51154`)
+    .set('Authorization', `Bearer ${token}`)
+    .expect(400)
+  })
+
+  test('el cotrolador .Delete responde correctamente si no se manda un token', async () => {
     const itemsBefore = await helper.blogsInDb()
     const deletedItem = itemsBefore[0]
     
 
     const response = await api
     .delete(`/api/blogs/${deletedItem.id}`)
-    .expect(204)
+    .expect(401)
 
     const itemsAfter = await helper.blogsInDb()
 
     const itemsAfterUrl = itemsAfter.map(i => i.url)
-    assert(!itemsAfterUrl.includes(deletedItem.url))
+    assert(itemsAfterUrl.includes(deletedItem.url))
 
-    assert.strictEqual(itemsAfter.length, itemsBefore.length -1)
-  })
-
-  test('el controlador Delete reacciona bien a un id que no existe', async () => {
-    const notExistId = await helper.nonExistingId()
-    
-    await api
-    .delete(`/api/blogs/${notExistId}`)
-    .expect(204)
-
-  })
-
-  test('el controlador responde correctamente 400 cuando el id no es valido', async () => {
-    await api
-    .delete(`/api/blogs/Idnovalido51154`)
-    .expect(400)
+    assert.strictEqual(itemsAfter.length, itemsBefore.length)
   })
 })
 
