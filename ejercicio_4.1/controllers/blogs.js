@@ -34,10 +34,22 @@ blogsRouter.post('/', middleware.getUser, async (request, response) => {
   response.status(201).json(savedBlog)
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
-  await Blog.findByIdAndDelete(request.params.id)
+blogsRouter.delete('/:id', middleware.getUser, async (request, response) => {
+  const deletedId = request.params.id
+  const deleteblog = await Blog.findById(deletedId)
+
+  if (!deleteblog) {
+    return response.status(404).json({ error: 'blog not found' })
+  }
   
-  response.status(204).end()
+  const idUserToken = request.user._id
+
+  if (deleteblog.user.toString() === idUserToken.toString()) {
+    await Blog.findByIdAndDelete(deletedId)
+    response.status(204).end() 
+  } else {
+    return response.status(401).json({error: "solo el usuario que creo el blog puede borrarlo"})
+  }
 })
 
 blogsRouter.put('/:id', async (request, response) => {
